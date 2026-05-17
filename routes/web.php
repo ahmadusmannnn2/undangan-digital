@@ -9,14 +9,17 @@ use App\Http\Controllers\Admin\OrderController as AdminOrderController;
 use App\Http\Controllers\User\OrderController;
 use App\Http\Controllers\InvitationController;
 use App\Http\Controllers\GuestController;
+use App\Http\Controllers\PreviewController;
 use App\Models\Template;
 
 // RUTE HALAMAN DEPAN (LANDING PAGE)
 Route::get('/', function () {
-    // Mengambil 6 template terbaru yang aktif untuk dipajang di halaman depan
     $templates = Template::where('is_active', true)->latest()->take(6)->get();
     return view('welcome', compact('templates'));
 });
+
+// Rute Preview Template (Publik)
+Route::get('/preview/{template}', [PreviewController::class, 'show'])->name('template.preview');
 
 // Redirect utama saat login
 Route::get('/dashboard', function () {
@@ -31,10 +34,10 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/dashboard', [AdminDashboard::class, 'index'])->name('dashboard');
     Route::resource('templates', TemplateController::class);
     
-    // Kelola Pesanan & Hapus Pesanan
+    // Kelola Pesanan
     Route::get('/orders', [AdminOrderController::class, 'index'])->name('orders.index');
     Route::patch('/orders/{order}/paid', [AdminOrderController::class, 'markAsPaid'])->name('orders.paid');
-    Route::delete('/orders/{order}', [AdminOrderController::class, 'destroy'])->name('orders.destroy'); // <-- Ini yang baru ditambahkan
+    Route::delete('/orders/{order}', [AdminOrderController::class, 'destroy'])->name('orders.destroy');
 });
 
 // Rute khusus User
@@ -43,8 +46,9 @@ Route::middleware(['auth'])->prefix('user')->name('user.')->group(function () {
     Route::get('/order/{template}', [OrderController::class, 'create'])->name('order.create');
     Route::post('/order/{template}', [OrderController::class, 'store'])->name('order.store');
     
-    // Lihat Daftar Tamu
+    // Manajemen Tamu
     Route::get('/order/{order}/guests', [UserDashboard::class, 'guests'])->name('guests.index');
+    Route::delete('/guests/{guest}', [GuestController::class, 'destroy'])->name('guests.destroy');
 });
 
 Route::middleware('auth')->group(function () {

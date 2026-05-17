@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 
 class GuestController extends Controller
 {
+    // Fungsi untuk tamu mengisi buku (Publik)
     public function store(Request $request, Order $order)
     {
         $request->validate([
@@ -23,7 +24,19 @@ class GuestController extends Controller
             'message' => $request->message,
         ]);
 
-        // Kembali ke halaman undangan dengan jangkar (anchor) #rsvp
         return back()->with('success_rsvp', 'Terima kasih! Ucapan dan konfirmasi kehadiran Anda telah terkirim.');
+    }
+
+    // Fungsi untuk pemilik undangan menghapus ucapan (Hanya User/Admin)
+    public function destroy(Guest $guest)
+    {
+        // Pastikan yang menghapus adalah pemilik undangan
+        if ($guest->order->user_id !== auth()->id()) {
+            abort(403, 'Anda tidak berhak menghapus ucapan ini.');
+        }
+
+        $guest->delete();
+
+        return back()->with('success', 'Ucapan tamu berhasil dihapus.');
     }
 }
